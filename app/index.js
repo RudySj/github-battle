@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 // Add css to be active in the component
 import './index.css'
+import Popular from './components/Popular'
 
 // Aspects of the components
 // State 
@@ -15,8 +16,8 @@ import './index.css'
 class App extends React.Component {
     render() {
         return (
-            <div>
-                Hello World!
+            <div className='container'>
+                <Popular />
             </div>
         )
     }
