@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { fetchPopularRepos } from '../utils/api'
 
 function LanguagesNav({ selectedLanguage, onUpdateLanguage }) {
     const languages = ['All', 'JavaScript', 'Ruby', 'Java', 'CSS', 'Python']
@@ -30,24 +31,64 @@ export default class Popular extends React.Component {
         super(props);
 
         this.state = {
-            language: 'All'
+            language: 'All',
+            repos: {},
+            error: null,
         }
 
         this.updateLanguage = this.updateLanguage.bind(this);
+        this.isLoading = this.isLoading.bind(this);
+    }
+
+    componentDidMount() {
+        this.updateLanguage(this.state.language);
     }
 
     updateLanguage(language) {
         this.setState({
-            language
+            language,
+            error: null,
         })
+        if (!this.state.repos[language]) {
+            fetchPopularRepos(language)
+                .then(data => {
+                    this.setState(({ language, repos }) => ({
+                        repos: {
+                            ...repos,
+                            [language]: data,
+                        }
+                    }))
+                })
+                .catch((error) => {
+                    console.warn('Error fetching repos: ', error);
+                    this.setState({
+                        error: 'There was a problem fetching the repositories.'
+                    })
+                })
+        }
+    }
+
+    isLoading() {
+        const { language, repos, error } = this.state;
+        return !repos[language] && error === null;
     }
 
     render() {
+        const { language, repos, error } = this.state;
+
         return (
-            <LanguagesNav
-                selectedLanguage={this.state.language}
-                onUpdateLanguage={this.updateLanguage}
-            />
+            <React.Fragment>
+                <LanguagesNav
+                    selectedLanguage={language}
+                    onUpdateLanguage={this.updateLanguage}
+                />
+
+                {this.isLoading() && <p>Loading...</p>}
+
+                {error && <p>{error}</p>}
+
+                {repos[language] && <pre>{JSON.stringify(repos[language], null, 2)}</pre>}
+            </React.Fragment>
         )
     }
 }
